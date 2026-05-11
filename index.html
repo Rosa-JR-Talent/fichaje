@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Fichaje">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>Fichaje</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #f5f4f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    body { display: flex; justify-content: center; }
+    #app { width: 100%; max-width: 420px; padding: 1.5rem 1rem 3rem; }
+
+    /* SETUP SCREEN */
+    #setupScreen { display: flex; flex-direction: column; gap: 1rem; }
+    .setup-title { font-size: 22px; font-weight: 500; color: #2C2C2A; margin-bottom: 0.25rem; }
+    .setup-desc { font-size: 14px; color: #888780; line-height: 1.6; }
+    .field-label { font-size: 13px; color: #888780; margin-bottom: 6px; }
+    input[type=text], input[type=url] {
+      width: 100%; padding: 14px; border-radius: 10px;
+      border: 0.5px solid rgba(0,0,0,0.15); background: #fff;
+      font-size: 15px; color: #2C2C2A; outline: none;
+    }
+    input:focus { border-color: #639922; }
+    .btn-setup {
+      width: 100%; padding: 16px; border-radius: 12px; border: none;
+      background: #639922; color: #EAF3DE; font-size: 16px; font-weight: 500;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-setup:active { opacity: 0.8; }
+    .btn-setup:disabled { opacity: 0.4; }
+    .setup-help {
+      background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+      border-radius: 12px; padding: 1rem 1.25rem;
+    }
+    .setup-help .step { font-size: 13px; color: #444441; line-height: 1.8; }
+    .setup-help .step b { color: #2C2C2A; }
+    .setup-help a { color: #639922; }
+
+    /* MAIN SCREEN */
+    #mainScreen { display: none; flex-direction: column; gap: 0; }
+    .header { text-align: center; margin-bottom: 1.25rem; }
+    .date { font-size: 14px; color: #888780; margin-bottom: 4px; }
+    .clock { font-size: 52px; font-weight: 500; color: #2C2C2A; letter-spacing: -2px; line-height: 1.1; }
+
+    .user-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+      border-radius: 10px; padding: 0.6rem 1rem; margin-bottom: 1rem;
+    }
+    .user-name { font-size: 14px; font-weight: 500; color: #2C2C2A; }
+    .btn-config { font-size: 12px; color: #888780; background: none; border: none; cursor: pointer; padding: 4px; }
+
+    .status-card {
+      background: #fff; border: 0.5px solid rgba(0,0,0,0.12);
+      border-radius: 14px; padding: 1rem 1.25rem;
+      margin-bottom: 1rem; display: flex; align-items: center; gap: 12px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #B4B2A9; flex-shrink: 0; transition: background 0.3s; }
+    .dot.in { background: #3B6D11; }
+    .dot.out { background: #A32D2D; }
+    .status-label { font-size: 13px; color: #888780; }
+    .status-value { font-size: 16px; font-weight: 500; color: #2C2C2A; }
+    .working-time { font-size: 13px; color: #3B6D11; font-weight: 500; margin-top: 2px; }
+
+    .btn {
+      width: 100%; padding: 20px; border-radius: 14px; border: none;
+      font-size: 18px; font-weight: 500; cursor: pointer; margin-bottom: 0.75rem;
+      transition: transform 0.1s, opacity 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+    }
+    .btn:active { transform: scale(0.97); opacity: 0.85; }
+    .btn:disabled { opacity: 0.3; cursor: default; transform: none; }
+    .btn-entrada { background: #639922; color: #EAF3DE; }
+    .btn-salida { background: #A32D2D; color: #FCEBEB; }
+
+    .syncing { font-size: 12px; color: #888780; text-align: center; margin-top: -0.5rem; margin-bottom: 0.75rem; min-height: 18px; }
+    .syncing.ok { color: #3B6D11; }
+    .syncing.err { color: #A32D2D; }
+
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+    .metric { background: #EEEEE8; border-radius: 10px; padding: 0.85rem 1rem; }
+    .metric-label { font-size: 12px; color: #888780; margin-bottom: 4px; }
+    .metric-value { font-size: 24px; font-weight: 500; color: #2C2C2A; }
+
+    .section-title { font-size: 11px; color: #888780; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+    .record {
+      background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+      border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 6px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .rec-date { font-size: 13px; color: #888780; }
+    .rec-times { font-size: 14px; font-weight: 500; color: #2C2C2A; margin-top: 2px; }
+    .rec-dur { font-size: 13px; color: #888780; text-align: right; }
+    .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; background: #EAF3DE; color: #3B6D11; margin-left: 6px; }
+    .empty { text-align: center; padding: 1.5rem; color: #888780; font-size: 14px; }
+
+    @media (prefers-color-scheme: dark) {
+      html, body { background: #1a1a18; }
+      .clock, .status-value, .metric-value, .rec-times, .setup-title, input, .user-name { color: #f0efe8; }
+      .status-card, .record, .user-bar, .setup-help, input { background: #2c2c2a; border-color: rgba(255,255,255,0.1); }
+      .metric { background: #242422; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- PANTALLA DE CONFIGURACIÓN -->
+  <div id="setupScreen">
+    <div>
+      <div class="setup-title">Configurar fichaje</div>
+      <div class="setup-desc">Conecta con tu Google Sheets para guardar los registros en la nube.</div>
+    </div>
+
+    <div class="setup-help">
+      <div class="step">
+        <b>1.</b> Ve a <a href="https://sheets.google.com" target="_blank">sheets.google.com</a> y crea una hoja nueva<br>
+        <b>2.</b> En el menú: <b>Extensiones → Apps Script</b><br>
+        <b>3.</b> Borra el código existente y pega el archivo <b>Code.gs</b><br>
+        <b>4.</b> Pulsa <b>Implementar → Nueva implementación</b><br>
+        <b>5.</b> Tipo: <b>Aplicación web</b> · Acceso: <b>Cualquiera</b><br>
+        <b>6.</b> Copia la URL que aparece y pégala abajo
+      </div>
+    </div>
+
+    <div>
+      <div class="field-label">Tu nombre</div>
+      <input type="text" id="inputNombre" placeholder="Ej: María García" maxlength="50">
+    </div>
+    <div>
+      <div class="field-label">URL de la aplicación web (Apps Script)</div>
+      <input type="url" id="inputUrl" placeholder="https://script.google.com/macros/s/...">
+    </div>
+
+    <button class="btn-setup" id="btnGuardar" onclick="guardarConfig()">Conectar y empezar</button>
+  </div>
+
+  <!-- PANTALLA PRINCIPAL -->
+  <div id="mainScreen">
+    <div class="header">
+      <div class="date" id="dateDisplay"></div>
+      <div class="clock" id="clockDisplay">--:--:--</div>
+    </div>
+
+    <div class="user-bar">
+      <div class="user-name" id="userNameDisplay"></div>
+      <button class="btn-config" onclick="resetConfig()">⚙ Cambiar config</button>
+    </div>
+
+    <div class="status-card">
+      <div class="dot" id="dot"></div>
+      <div>
+        <div class="status-label" id="statusLabel">Sin fichar hoy</div>
+        <div class="status-value" id="statusValue">—</div>
+        <div class="working-time" id="workingTime" style="display:none"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-entrada" id="btnE" onclick="ficharEntrada()">Entrada</button>
+    <button class="btn btn-salida" id="btnS" onclick="ficharSalida()" disabled>Salida</button>
+    <div class="syncing" id="syncStatus"></div>
+
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Horas hoy</div><div class="metric-value" id="horasHoy">—</div></div>
+      <div class="metric"><div class="metric-label">Días este mes</div><div class="metric-value" id="diasMes">0</div></div>
+    </div>
+
+    <div class="section-title">Registros recientes</div>
+    <div id="historial"></div>
+  </div>
+
+</div>
+
+<script>
+const KEY = 'fichaje_v2';
+let state = JSON.parse(localStorage.getItem(KEY) || 'null') || { records: [], active: null, url: '', nombre: '' };
+let workInt;
+
+function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+function pad(n) { return String(n).padStart(2,'0'); }
+function fmt(ts) { const d=new Date(ts); return pad(d.getHours())+':'+pad(d.getMinutes()); }
+function dur(ms) { const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000); return h>0?h+'h '+pad(m)+'m':m+'m'; }
+function durDecimal(ms) { return (ms/3600000).toFixed(2)+'h'; }
+function todayKey() { const d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function genId() { return Date.now()+'-'+Math.random().toString(36).slice(2,7); }
+
+function updateClock() {
+  const n=new Date();
+  document.getElementById('clockDisplay').textContent=pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+  const days=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  document.getElementById('dateDisplay').textContent=days[n.getDay()]+', '+n.getDate()+' de '+months[n.getMonth()];
+}
+
+async function syncToSheets(payload) {
+  const sync=document.getElementById('syncStatus');
+  sync.textContent='Guardando en Sheets...'; sync.className='syncing';
+  try {
+    const r=await fetch(state.url,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain'}});
+    const j=await r.json();
+    if(j.ok) { sync.textContent='✓ Guardado en Google Sheets'; sync.className='syncing ok'; }
+    else { sync.textContent='Error: '+j.error; sync.className='syncing err'; }
+  } catch(e) {
+    sync.textContent='Sin conexión — guardado local'; sync.className='syncing err';
+  }
+  setTimeout(()=>{sync.textContent='';sync.className='syncing';},4000);
+}
+
+function render() {
+  const hasUrl=state.url && state.nombre;
+  document.getElementById('setupScreen').style.display=hasUrl?'none':'flex';
+  document.getElementById('mainScreen').style.display=hasUrl?'flex':'none';
+  if(!hasUrl) return;
+
+  document.getElementById('userNameDisplay').textContent=state.nombre;
+  const dot=document.getElementById('dot');
+  const btnE=document.getElementById('btnE');
+  const btnS=document.getElementById('btnS');
+  const wt=document.getElementById('workingTime');
+
+  if(state.active) {
+    dot.className='dot in';
+    document.getElementById('statusLabel').textContent='En el trabajo desde';
+    document.getElementById('statusValue').textContent=fmt(state.active.entrada);
+    wt.style.display='block';
+    wt.textContent='Llevas '+dur(Date.now()-state.active.entrada);
+    btnE.disabled=true; btnS.disabled=false;
+    clearInterval(workInt);
+    workInt=setInterval(()=>{wt.textContent='Llevas '+dur(Date.now()-state.active.entrada);},30000);
+  } else {
+    dot.className='dot'+(state.records.length?' out':'');
+    document.getElementById('statusLabel').textContent='Sin fichar hoy';
+    document.getElementById('statusValue').textContent='—';
+    wt.style.display='none';
+    btnE.disabled=false; btnS.disabled=true;
+    clearInterval(workInt);
+  }
+
+  const today=todayKey();
+  const todayRecs=state.records.filter(r=>r.day===today&&r.salida);
+  const totalHoy=todayRecs.reduce((s,r)=>s+(r.salida-r.entrada),0);
+  document.getElementById('horasHoy').textContent=totalHoy>0?dur(totalHoy):(state.active?'activo':'—');
+
+  const now=new Date();
+  const mesKey=now.getFullYear()+'-'+pad(now.getMonth()+1);
+  const dias=new Set(state.records.filter(r=>r.day&&r.day.startsWith(mesKey)&&r.salida).map(r=>r.day));
+  document.getElementById('diasMes').textContent=dias.size;
+
+  const hist=document.getElementById('historial');
+  const recs=[...state.records].reverse().slice(0,10);
+  if(!recs.length){hist.innerHTML='<div class="empty">No hay registros aún</div>';return;}
+  hist.innerHTML=recs.map(r=>{
+    const dateStr=r.day?r.day.split('-').slice(1).reverse().join('/'):''
+    const salLabel=r.salida?fmt(r.salida):'—';
+    const badge=r.salida?'':`<span class="badge">activo</span>`;
+    const d=r.salida?dur(r.salida-r.entrada):'';
+    return `<div class="record"><div><div class="rec-date">${dateStr}</div><div class="rec-times">${fmt(r.entrada)} → ${salLabel}${badge}</div></div><div class="rec-dur">${d}</div></div>`;
+  }).join('');
+}
+
+async function ficharEntrada() {
+  if(state.active) return;
+  const id=genId();
+  const now=new Date();
+  const fecha=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+  const hora=pad(now.getHours())+':'+pad(now.getMinutes());
+  state.active={entrada:Date.now(),id,fecha,hora};
+  save(); render();
+  await syncToSheets({action:'entrada',id,fecha,hora,usuario:state.nombre});
+}
+
+async function ficharSalida() {
+  if(!state.active) return;
+  const now=new Date();
+  const hora=pad(now.getHours())+':'+pad(now.getMinutes());
+  const ms=Date.now()-state.active.entrada;
+  const horas=durDecimal(ms);
+  const rec={entrada:state.active.entrada,salida:Date.now(),day:state.active.fecha,id:state.active.id};
+  state.records.push(rec);
+  const payload={action:'salida',id:state.active.id,hora,horas,usuario:state.nombre};
+  state.active=null;
+  save(); render();
+  await syncToSheets(payload);
+}
+
+function guardarConfig() {
+  const url=document.getElementById('inputUrl').value.trim();
+  const nombre=document.getElementById('inputNombre').value.trim();
+  if(!url||!nombre){alert('Rellena los dos campos');return;}
+  state.url=url; state.nombre=nombre;
+  save(); render();
+}
+
+function resetConfig() {
+  if(confirm('¿Cambiar la configuración?')) { state.url=''; state.nombre=''; save(); render(); }
+}
+
+setInterval(updateClock,1000);
+updateClock(); render();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
